@@ -1,0 +1,22 @@
+sudo: required
+services: 
+  - docker
+
+before_install:
+  - docker build -t jalakpatoliya/react-test  -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run jalakpatoliya/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t jalakpatoliya/multi-client  ./client
+  - docker build -t jalakpatoliya/multi-server  ./server
+  - docker build -t jalakpatoliya/multi-nginx  ./nginx
+  - docker build -t jalakpatoliya/multi-worker  ./worker
+  # login to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take those images and push them to docker hub
+  - docker push  jalakpatoliya/multi-client
+  - docker push  jalakpatoliya/multi-nginx
+  - docker push  jalakpatoliya/multi-server
+  - docker push  jalakpatoliya/multi-worker
